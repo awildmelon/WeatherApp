@@ -3,7 +3,11 @@ import requests
 from PyQt6.QtWidgets import (QApplication, QLabel, QVBoxLayout, QLineEdit,
                              QWidget, QLabel, QPushButton)
 from PyQt6.QtCore import Qt 
-from config import weather_api_key  # Import the API key
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+weather_api_key = os.getenv("weather_api_key")
 
 class WeatherApp(QWidget):
     def __init__(self):
