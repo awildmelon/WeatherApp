@@ -6,12 +6,16 @@ from PyQt6.QtCore import Qt
 from dotenv import load_dotenv
 import os
 
+# Load API key from .env file
 load_dotenv()
 weather_api_key = os.getenv("weather_api_key")
 
+# Define the main WeatherApp class
 class WeatherApp(QWidget):
     def __init__(self):
         super().__init__()
+        
+        # Create the widgets for each element
         self.city_label = QLabel("Enter city name: ", self)
         self.city_input = QLineEdit(self)
         self.get_weather_btn = QPushButton("Get Weather", self)
@@ -20,10 +24,14 @@ class WeatherApp(QWidget):
         self.description_label = QLabel(self)
         self.initUI()
 
+    # Initialize the user interface
     def initUI(self):
-
         self.setWindowTitle("Weather App")
+        
+        # Set the initial size of the window
+        self.resize(800, 600)
 
+        # Set up the layout
         qvbox = QVBoxLayout()
         qvbox.addWidget(self.city_label)
         qvbox.addWidget(self.city_input)
@@ -34,12 +42,14 @@ class WeatherApp(QWidget):
 
         self.setLayout(qvbox)
 
+        # Align the widgets
         self.city_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.city_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.temp_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.emoji_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.description_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # Set object names for styling
         self.city_label.setObjectName("city_label")
         self.city_input.setObjectName("city_input")
         self.get_weather_btn.setObjectName("get_weather_btn")
@@ -47,6 +57,7 @@ class WeatherApp(QWidget):
         self.emoji_label.setObjectName("emoji_label")
         self.description_label.setObjectName("description_label")
 
+        # Apply styles
         self.setStyleSheet("""
             QLabel, QPushButton {
                 font-family: Arial;
@@ -81,8 +92,10 @@ class WeatherApp(QWidget):
             }
         """)
 
+        # Connect the button to the get_weather method
         self.get_weather_btn.clicked.connect(self.get_weather)
 
+    # Fetch weather data from the API
     def get_weather(self):
         print("Getting weather...")
 
@@ -100,42 +113,73 @@ class WeatherApp(QWidget):
         except requests.exceptions.HTTPError as http_error:
             match response.status_code:
                 case 400:
-                    print("Bad request. Please check input")
+                    self.display_error("Bad request. Please check input")
                 case 401:
-                    print("API key is invalid")
+                    self.display_error("API key is invalid")
                 case 403:
-                    print("Access to the API is forbidden")
+                    self.display_error("Access to the API is forbidden")
                 case 404:
-                    print("City not found")
+                    self.display_error("City not found")
                 case 500:
-                    print("Internal server error, try again later")
+                    self.display_error("Internal server error, try again later")
                 case 502:
-                    print("Bad gateway")
+                    self.display_error("Bad gateway")
                 case 503:
-                    print("Service unavailable")
+                    self.display_error("Service unavailable")
                 case 504:
-                    print("Gateway timeout")
+                    self.display_error("Gateway timeout")
                 case _:
-                    print(f"An error occurred: {http_error}")
+                    self.display_error(f"An error occurred: {http_error}")
 
         except requests.exceptions.ConnectionError:
-            print("A connection error occurred")
+            self.display_error("A connection error occurred")
 
         except requests.exceptions.Timeout:
-            print("The request timed out")
+            self.display_error("The request timed out")
 
         except requests.exceptions.TooManyRedirects:
-            print("Too many redirects")
+            self.display_error("Too many redirects")
 
         except requests.exceptions.RequestException as req_error:
-            print(f"An error occurred: {req_error}")
+            self.display_error(f"An error occurred: {req_error}")
 
+    # Display error messages
     def display_error(self, message):
-        pass
+        self.temp_label.setStyleSheet("color: red; font-size: 30px;")
+        self.temp_label.setText(message)
 
+    # Get emoji based on weather description
+    def get_emoji(self, description):
+        description = description.lower()
+        if "clear" in description:
+            return "☀️"
+        elif "cloud" in description:
+            return "☁️"
+        elif "rain" in description:
+            return "🌧️"
+        elif "snow" in description:
+            return "❄️"
+        elif "thunderstorm" in description:
+            return "⛈️"
+        elif "mist" in description or "fog" in description:
+            return "🌫️"
+        else:
+            return "🌈"
+
+    # Display weather data
     def display_weather(self, weather_data):
-        pass
+        temp = weather_data["main"]["temp"]
+        description = weather_data["weather"][0]["description"]
+        emoji = self.get_emoji(description)
 
+        # Round the temperature to one decimal place
+        rounded_temp = round(temp, 1)
+
+        self.temp_label.setText(f"{rounded_temp}°F")
+        self.emoji_label.setText(emoji)
+        self.description_label.setText(description)
+
+# Main entry point of the application
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = WeatherApp()
