@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (QApplication, QLabel, QVBoxLayout, QLineEdit,
 from PyQt6.QtCore import Qt 
 from dotenv import load_dotenv
 import os
+import speech_recognition as sr  # Import speech_recognition directly
 
 # Load API key from .env file
 load_dotenv()
@@ -18,7 +19,9 @@ class WeatherApp(QWidget):
         # Create the widgets for each element
         self.city_label = QLabel("Enter city name: ", self)
         self.city_input = QLineEdit(self)
+        self.country_label = QLabel("Country: ", self)  # New country label
         self.get_weather_btn = QPushButton("Get Weather", self)
+        self.voice_recognition_btn = QPushButton("Use Voice Recognition", self)  # New button for voice recognition
         self.temp_label = QLabel(self)
         self.emoji_label = QLabel(self)
         self.description_label = QLabel(self)
@@ -36,7 +39,9 @@ class WeatherApp(QWidget):
         qvbox = QVBoxLayout()
         qvbox.addWidget(self.city_label)
         qvbox.addWidget(self.city_input)
+        qvbox.addWidget(self.country_label)  # Add country label to layout
         qvbox.addWidget(self.get_weather_btn)
+        qvbox.addWidget(self.voice_recognition_btn)  # Add voice recognition button to layout
         qvbox.addWidget(self.temp_label)
         qvbox.addWidget(self.emoji_label)
         qvbox.addWidget(self.description_label)
@@ -47,6 +52,7 @@ class WeatherApp(QWidget):
         # Align the widgets
         self.city_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.city_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.country_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Align country label
         self.temp_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.emoji_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.description_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -55,7 +61,9 @@ class WeatherApp(QWidget):
         # Set object names for styling
         self.city_label.setObjectName("city_label")
         self.city_input.setObjectName("city_input")
+        self.country_label.setObjectName("country_label")  # Set object name for country label
         self.get_weather_btn.setObjectName("get_weather_btn")
+        self.voice_recognition_btn.setObjectName("voice_recognition_btn")  # Set object name for voice recognition button
         self.temp_label.setObjectName("temp_label")
         self.emoji_label.setObjectName("emoji_label")
         self.description_label.setObjectName("description_label")
@@ -73,7 +81,7 @@ class WeatherApp(QWidget):
                 color: #333;
             }
             
-            QLabel#city_label {
+            QLabel#city_label, QLabel#country_label {
                 font-size: 40px;
                 color: #444;
             }
@@ -88,6 +96,16 @@ class WeatherApp(QWidget):
             QPushButton#get_weather_btn {
                 font-size: 30px;
                 background-color: #007BFF;
+                color: white;
+                font-weight: bold;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+            }
+
+            QPushButton#voice_recognition_btn {
+                font-size: 30px;
+                background-color: #007BFF;  /* Blue */
                 color: white;
                 font-weight: bold;
                 padding: 10px;
@@ -116,12 +134,12 @@ class WeatherApp(QWidget):
             }
         """)
 
-        # Connect the button to the get_weather method
+        # Connect the buttons to their respective methods
         self.get_weather_btn.clicked.connect(self.get_weather)
+        self.voice_recognition_btn.clicked.connect(self.use_voice_recognition)  # Connect voice recognition button
 
     # Fetch weather data from the API
     def get_weather(self):
-
         city = self.city_input.text()
         weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={weather_api_key}&units=imperial"
 
@@ -133,6 +151,7 @@ class WeatherApp(QWidget):
 
             if weather_data["cod"] == 200:
                 self.display_weather(weather_data)
+                self.country_label.setText(f"Country: {weather_data['sys']['country']}")  # Update country label
         except requests.exceptions.HTTPError as http_error:
             match response.status_code:
                 case 400:
@@ -165,6 +184,41 @@ class WeatherApp(QWidget):
 
         except requests.exceptions.RequestException as req_error:
             self.display_error(f"An error occurred: {req_error}")
+
+    # Use voice recognition to get the city name
+    def use_voice_recognition(self):
+        city = self.recognize()
+        if city:
+            self.city_input.setText(city)
+            self.get_weather()
+
+    # Listen for voice input
+    def listen(self):
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            self.voice_recognition_btn.setText("Listening...")
+            self.voice_recognition_btn.setStyleSheet("background-color: #4CAF50; color: white;")  # Green
+            QApplication.processEvents()  # Update the button text and color immediately
+            audio_text = r.listen(source)
+            self.voice_recognition_btn.setText("Use Voice Recognition")
+            self.voice_recognition_btn.setStyleSheet("background-color: #007BFF; color: white;")  # Blue
+            try:
+                return r.recognize_google(audio_text)
+            except:
+                return "Sorry, I did not get that"
+
+    # Recognize the city name from voice input
+    def recognize(self):
+        command = self.listen()
+        if "what's the weather like in" in command:
+            location = command.replace("what's the weather like in ", "")
+            return location
+        elif "what's the weather in" in command:
+            location = command.replace("what's the weather in ", "")
+            return location
+        elif "what's the temperature in" in command:
+            location = command.replace("what's the temperature in ", "")
+            return location
 
     # Display error messages
     def display_error(self, message):
