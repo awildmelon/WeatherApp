@@ -22,6 +22,7 @@ class WeatherApp(QWidget):
         self.temp_label = QLabel(self)
         self.emoji_label = QLabel(self)
         self.description_label = QLabel(self)
+        self.humidity_label = QLabel(self)
         self.initUI()
 
     # Initialize the user interface
@@ -39,6 +40,7 @@ class WeatherApp(QWidget):
         qvbox.addWidget(self.temp_label)
         qvbox.addWidget(self.emoji_label)
         qvbox.addWidget(self.description_label)
+        qvbox.addWidget(self.humidity_label)
 
         self.setLayout(qvbox)
 
@@ -48,6 +50,7 @@ class WeatherApp(QWidget):
         self.temp_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.emoji_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.description_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.humidity_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Set object names for styling
         self.city_label.setObjectName("city_label")
@@ -56,30 +59,45 @@ class WeatherApp(QWidget):
         self.temp_label.setObjectName("temp_label")
         self.emoji_label.setObjectName("emoji_label")
         self.description_label.setObjectName("description_label")
+        self.humidity_label.setObjectName("humidity_label")
 
-        # Apply styles
+        # Apply modern styles
         self.setStyleSheet("""
+            QWidget {
+                background-color: #f0f0f0;
+            }
+            
             QLabel, QPushButton {
-                font-family: Arial;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 font-size: 20px;
+                color: #333;
             }
             
             QLabel#city_label {
                 font-size: 40px;
+                color: #444;
             }
             
             QLineEdit#city_input {
-                font-size: 30px
+                font-size: 30px;
+                padding: 10px;
+                border: 2px solid #ccc;
+                border-radius: 5px;
             }
 
             QPushButton#get_weather_btn {
                 font-size: 30px;
-                background-color: #4CAF50;  /* Green */
+                background-color: #007BFF;
+                color: white;
                 font-weight: bold;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
             }    
                            
             QLabel#temp_label {
                 font-size: 60px;
+                color: #333;
             }
                            
             QLabel#emoji_label {
@@ -89,6 +107,12 @@ class WeatherApp(QWidget):
                            
             QLabel#description_label {
                 font-size: 30px;
+                color: #666;
+            }
+
+            QLabel#humidity_label {
+                font-size: 30px;
+                color: #666;
             }
         """)
 
@@ -97,7 +121,6 @@ class WeatherApp(QWidget):
 
     # Fetch weather data from the API
     def get_weather(self):
-        print("Getting weather...")
 
         city = self.city_input.text()
         weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={weather_api_key}&units=imperial"
@@ -171,13 +194,16 @@ class WeatherApp(QWidget):
         temp = weather_data["main"]["temp"]
         description = weather_data["weather"][0]["description"]
         emoji = self.get_emoji(description)
+        humidity = weather_data["main"]["humidity"]
 
         # Round the temperature to one decimal place
         rounded_temp = round(temp, 1)
 
         self.temp_label.setText(f"{rounded_temp}°F")
+        self.temp_label.setStyleSheet("color: black; font-size: 30px;")
         self.emoji_label.setText(emoji)
         self.description_label.setText(description)
+        self.humidity_label.setText(f"Humidity: {humidity}%")
 
 # Main entry point of the application
 if __name__ == "__main__":
