@@ -212,7 +212,7 @@ class WeatherApp(QWidget):
 
     # Recognize the city name from voice input
     def recognize(self):
-        command = listen().lower()
+        command = self.listen().lower()
         
         weather_keywords = ['weather', 'temperature', 'forecast', 'climate', 'how is the weather', 'what is the weather', 'how’s the weather']
         
