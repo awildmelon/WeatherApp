@@ -193,32 +193,33 @@ class WeatherApp(QWidget):
             self.get_weather()
 
     # Listen for voice input
-    def listen(self):
-        r = sr.Recognizer()
-        with sr.Microphone() as source:
-            self.voice_recognition_btn.setText("Listening...")
-            self.voice_recognition_btn.setStyleSheet("background-color: #4CAF50; color: white;")  # Green
-            QApplication.processEvents()  # Update the button text and color immediately
-            audio_text = r.listen(source)
-            self.voice_recognition_btn.setText("Use Voice Recognition")
-            self.voice_recognition_btn.setStyleSheet("background-color: #007BFF; color: white;")  # Blue
-            try:
-                return r.recognize_google(audio_text)
-            except:
-                return "Sorry, I did not get that"
+    def listen():
+      r = sr.Recognizer()
+      with sr.Microphone() as source:
+          try:
+              audio_text = r.listen(source)
+              return r.recognize_google(audio_text)
+          except sr.UnknownValueError:
+              return "Sorry, I couldn't understand the audio."
+          except sr.RequestError:
+              return "Sorry, there was an issue connecting to the recognition service."
 
     # Recognize the city name from voice input
-    def recognize(self):
-        command = self.listen()
-        if "what's the weather like in" in command:
-            location = command.replace("what's the weather like in ", "")
-            return location
-        elif "what's the weather in" in command:
-            location = command.replace("what's the weather in ", "")
-            return location
-        elif "what's the temperature in" in command:
-            location = command.replace("what's the temperature in ", "")
-            return location
+    def recognize():
+        command = listen().lower()
+        
+        weather_keywords = ['weather', 'temperature', 'forecast', 'climate', 'how is the weather', 'what is the weather', 'how’s the weather']
+        
+        if any(keyword in command for keyword in weather_keywords):
+            if "in" in command:
+                location = command.split("in")[-1].strip() #extract location from command
+                return location
+            else:
+                print("No specific location mentioned in the command.")
+                return "No location specified"
+        else:
+            print("No weather-related command detected.")
+            return None
 
     # Display error messages
     def display_error(self, message):
