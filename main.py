@@ -193,9 +193,15 @@ class WeatherApp(QWidget):
             self.get_weather()
 
     # Listen for voice input
-    def listen():
+    def listen(self):
       r = sr.Recognizer()
       with sr.Microphone() as source:
+          self.voice_recognition_btn.setText("Listening...")
+          self.voice_recognition_btn.setStyleSheet("background-color: #4CAF50; color: white;")  # Green
+          QApplication.processEvents()  # Update the button text and color immediately
+          audio_text = r.listen(source)
+          self.voice_recognition_btn.setText("Use Voice Recognition")
+          self.voice_recognition_btn.setStyleSheet("background-color: #007BFF; color: white;")  # Blue
           try:
               audio_text = r.listen(source)
               return r.recognize_google(audio_text)
@@ -205,7 +211,7 @@ class WeatherApp(QWidget):
               return "Sorry, there was an issue connecting to the recognition service."
 
     # Recognize the city name from voice input
-    def recognize():
+    def recognize(self):
         command = listen().lower()
         
         weather_keywords = ['weather', 'temperature', 'forecast', 'climate', 'how is the weather', 'what is the weather', 'how’s the weather']
